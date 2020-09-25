@@ -98,21 +98,14 @@ int readInt()
   char c;
   while (isValid(infile.peek()))
   {
-    try
+
+    infile.get(c);
+    offset++;
+    if (c < '0' || c > '9')
     {
-      infile.get(c);
-      offset++;
-      if (c < '0' || c > '9')
-      {
-        throw(0);
-      }
-      defcount = defcount * 10 + (c - '0');
+      parseError(0);
     }
-    catch (int errCode)
-    {
-      parseError(errCode);
-      exit(0);
-    }
+    defcount = defcount * 10 + (c - '0');
   }
 
   return defcount;
@@ -126,6 +119,13 @@ string readSymbol()
 {
   // find next valid char
   moveToToken();
+
+  // if eof
+  if (infile.eof())
+  {
+    parseError(1);
+  }
+
   // build symbol
   string symbol;
   char c;
@@ -134,6 +134,17 @@ string readSymbol()
     infile.get(c);
     offset++;
     symbol += c;
+
+    regex reg("[a-zA-Z]");
+    if (symbol.length() == 1 && !regex_match(symbol, reg))
+    {
+      parseError(1);
+    }
+  }
+
+  if (symbol.length() > 16)
+  {
+    parseError(3);
   }
 
   return symbol;
@@ -156,27 +167,13 @@ char readIEAR()
 }
 
 /**
- * check the Symbol is valid
- */
-bool isValidSymbol(string sym)
-{
-  if (sym.length() > 16)
-  {
-    return false;
-  }
-
-  regex reg("[a-zA-Z][a-zA-Z0-9]*");
-  return regex_match(sym, reg);
-}
-
-/**
  * check the character is valid
  *
  * @param character
  */
 bool isValid(char ch)
 {
-  return ch != ' ' && ch != '\n' && ch != '\t';
+  return ch != ' ' && ch != '\n' && ch != '\t' && ch != -1;
 }
 
 /**
@@ -185,6 +182,8 @@ bool isValid(char ch)
 void moveToToken()
 {
   char c;
+  int tmpLine = line;
+  int tmpOffset = offset;
 
   while (!isValid(infile.peek()))
   {
@@ -200,6 +199,8 @@ void moveToToken()
     // check file status
     if (infile.eof())
     {
+      line = line - 2;
+      offset = line == tmpLine ? tmpOffset + 1 : 1;
       break;
     }
   }
@@ -208,6 +209,7 @@ void moveToToken()
 void parseError(int errcode)
 {
   cout << "Parse Error line " << line << " offset " << offset << ": " << errstr[errcode] << endl;
+  exit(0);
 }
 
 /**
