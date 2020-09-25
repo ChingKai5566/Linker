@@ -1,15 +1,21 @@
 #include "Linker.hpp"
-#include "Module.cpp"
 
 /**
  * Global variable
  */
-ifstream infile;
-int line;
-int offset;
-vector<Module> objectModuleList;
-unordered_map<string, int> symToVal;
-unordered_map<int, string> addrToSym;
+static ifstream infile;
+static int line;
+static int offset;
+static unordered_map<string, int> symToVal; // definition list
+
+static string errstr[] = {
+    "NUM_EXPECTED",           // Number expect
+    "SYM_EXPECTED",           // Symbol expected
+    "ADDR_EXPECTED",          // Addressing Expected which is A/E/I/R
+    "SYM_TOO_LONG",           // Symbol Name is too long
+    "TOO_MANY_DEF_IN_MODULE", // > 16
+    "TOO_MANY_USE_IN_MODULE", // > 16
+    "TOO_MANY_INSTR"};        // total num_instr exceeds memory size (512)
 
 /**
  * tokenizer
@@ -33,9 +39,6 @@ void pass1(string filename)
 
   while (!infile.eof())
   {
-    // start to create an Object Module
-    Module module;
-
     // definition list
     int defCount = readInt();
 
@@ -43,8 +46,6 @@ void pass1(string filename)
     {
       break;
     }
-
-    module.defCount = defCount;
 
     for (int i = 0; i < defCount; i++)
     {
@@ -55,18 +56,14 @@ void pass1(string filename)
 
     // use list
     int useCount = readInt();
-    module.useCount = useCount;
 
     for (int i = 0; i < useCount; i++)
     {
       string sym = readSymbol();
-      module.symUseList.push_back(sym);
     }
 
     // program text
     int codeCount = readInt();
-    module.codeCount = codeCount;
-    len += codeCount;
 
     for (int i = 0; i < codeCount; i++)
     {
@@ -74,9 +71,9 @@ void pass1(string filename)
       int operand = readInt();
     }
 
-    objectModuleList.push_back(module);
+    len += codeCount;
   }
-  cout << objectModuleList.size() << endl;
+
   print_map(symToVal);
 
   infile.close();
@@ -101,9 +98,21 @@ int readInt()
   char c;
   while (isValid(infile.peek()))
   {
-    infile.get(c);
-    offset++;
-    defcount = defcount * 10 + (c - '0');
+    try
+    {
+      infile.get(c);
+      offset++;
+      if (c < '0' || c > '9')
+      {
+        throw(0);
+      }
+      defcount = defcount * 10 + (c - '0');
+    }
+    catch (int errCode)
+    {
+      parseError(errCode);
+      exit(0);
+    }
   }
 
   return defcount;
@@ -194,6 +203,11 @@ void moveToToken()
       break;
     }
   }
+}
+
+void parseError(int errcode)
+{
+  cout << "Parse Error line " << line << " offset " << offset << ": " << errstr[errcode] << endl;
 }
 
 /**

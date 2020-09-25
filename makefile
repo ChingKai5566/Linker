@@ -3,4 +3,4 @@ clean:
 
 run:
 	g++ *.cpp -std=c++2a -o a.out
-	./a.out ../lab1samples/input-1
+	./a.out ../lab1samples/input-14

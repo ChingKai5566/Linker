@@ -14,6 +14,7 @@ bool isValid(char ch);
 void moveToToken();
 void pass1(string filename);
 char readIEAR();
+void parseError(int errcode);
 
 // print a pair
 template <typename T1, typename T2>
