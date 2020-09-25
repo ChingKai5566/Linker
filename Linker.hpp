@@ -15,6 +15,7 @@ void moveToToken();
 void pass1(string filename);
 char readIEAR();
 void parseError(int errcode);
+int readAddr();
 
 // print a pair
 template <typename T1, typename T2>

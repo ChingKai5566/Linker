@@ -15,8 +15,8 @@ static string errstr[] = {
     "SYM_TOO_LONG",           // Symbol Name is too long
     "TOO_MANY_DEF_IN_MODULE", // > 16
     "TOO_MANY_USE_IN_MODULE", // > 16
-    "TOO_MANY_INSTR",         // total num_instr exceeds memory size (512)
-    "ADDR_MODE_EXPECTED"};
+    "TOO_MANY_INSTR"          // total num_instr exceeds memory size (512)
+};
 
 /**
  * tokenizer
@@ -58,6 +58,11 @@ void pass1(string filename)
     // use list
     int useCount = readInt();
 
+    if (useCount == -1)
+    {
+      parseError(0);
+    }
+
     for (int i = 0; i < useCount; i++)
     {
       string sym = readSymbol();
@@ -69,7 +74,7 @@ void pass1(string filename)
     for (int i = 0; i < codeCount; i++)
     {
       char addressMode = readIEAR();
-      int operand = readInt();
+      int operand = readAddr();
     }
 
     len += codeCount;
@@ -95,7 +100,7 @@ int readInt()
   }
 
   // calculate defcount
-  int defcount = 0;
+  int count = 0;
   char c;
   while (isValid(infile.peek()))
   {
@@ -106,10 +111,39 @@ int readInt()
     {
       parseError(0);
     }
-    defcount = defcount * 10 + (c - '0');
+    count = count * 10 + (c - '0');
   }
 
-  return defcount;
+  return count;
+}
+
+int readAddr()
+{
+  // find next valid char
+  moveToToken();
+
+  // last run will be here
+  if (infile.eof())
+  {
+    parseError(2);
+  }
+
+  // calculate defcount
+  int count = 0;
+  char c;
+  while (isValid(infile.peek()))
+  {
+
+    infile.get(c);
+    offset++;
+    if (c < '0' || c > '9')
+    {
+      parseError(2);
+    }
+    count = count * 10 + (c - '0');
+  }
+
+  return count;
 }
 
 /**
@@ -173,7 +207,7 @@ char readIEAR()
   // check error
   if (c != 'I' && c != 'E' && c != 'A' && c != 'R')
   {
-    parseError(7);
+    parseError(2);
   }
 
   return c;
@@ -226,7 +260,7 @@ void parseError(int errcode)
 }
 
 /**
- * program start from here
+ * program starts from here
  */
 int main(int argc, char *argv[])
 {
