@@ -12,6 +12,8 @@ string readSymbol();
 bool isValidSymbol(string sym);
 bool isValid(char ch);
 void moveToToken();
+void pass1(string filename);
+char readIEAR();
 
 // print a pair
 template <typename T1, typename T2>
@@ -28,4 +30,15 @@ void print_map(T &m)
     return;
   for (auto x : m)
     print_pair(x);
+}
+
+// print a list
+template <typename T>
+void print_list(vector<T> &v)
+{
+  if (v.empty())
+    return;
+  for (T &i : v)
+    cout << i << " ";
+  cout << endl;
 }

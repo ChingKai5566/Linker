@@ -1,10 +1,15 @@
 #include "Linker.hpp"
+#include "Module.cpp"
 
 /**
  * Global variable
  */
 ifstream infile;
-unordered_map<string, int> symbolToVal;
+int line;
+int offset;
+vector<Module> objectModuleList;
+unordered_map<string, int> symToVal;
+unordered_map<int, string> addrToSym;
 
 /**
  * tokenizer
@@ -12,22 +17,67 @@ unordered_map<string, int> symbolToVal;
  */
 void tokenizer(string filename)
 {
+  pass1(filename);
+}
+
+/**
+ * first time go through the text, check syntax and grammer error
+ * @param name input file name
+ */
+void pass1(string filename)
+{
   infile.open(filename);
+  int len = 0;
+  line = 1;
+  offset = 0;
 
   while (!infile.eof())
   {
-    int defcount = readInt();
+    // start to create an Object Module
+    Module module;
 
-    for (int i = 0; i < defcount; i++)
+    // definition list
+    int defCount = readInt();
+
+    if (defCount == -1)
+    {
+      break;
+    }
+
+    module.defCount = defCount;
+
+    for (int i = 0; i < defCount; i++)
     {
       string sym = readSymbol();
       int val = readInt();
-      symbolToVal[sym] = val;
-      print_map(symbolToVal);
+      symToVal[sym] = val + len;
     }
 
-    break;
+    // use list
+    int useCount = readInt();
+    module.useCount = useCount;
+
+    for (int i = 0; i < useCount; i++)
+    {
+      string sym = readSymbol();
+      module.symUseList.push_back(sym);
+    }
+
+    // program text
+    int codeCount = readInt();
+    module.codeCount = codeCount;
+    len += codeCount;
+
+    for (int i = 0; i < codeCount; i++)
+    {
+      char addressMode = readIEAR();
+      int operand = readInt();
+    }
+
+    objectModuleList.push_back(module);
   }
+  cout << objectModuleList.size() << endl;
+  print_map(symToVal);
 
   infile.close();
 }
@@ -40,12 +90,19 @@ int readInt()
   // find next valid char
   moveToToken();
 
+  // last run will be here
+  if (infile.eof())
+  {
+    return -1;
+  }
+
   // calculate defcount
   int defcount = 0;
   char c;
   while (isValid(infile.peek()))
   {
     infile.get(c);
+    offset++;
     defcount = defcount * 10 + (c - '0');
   }
 
@@ -60,17 +117,33 @@ string readSymbol()
 {
   // find next valid char
   moveToToken();
-
   // build symbol
   string symbol;
   char c;
   while (isValid(infile.peek()))
   {
     infile.get(c);
+    offset++;
     symbol += c;
   }
 
   return symbol;
+}
+
+/**
+ * read IEAR address mode
+ */
+char readIEAR()
+{
+  // find next valid char
+  moveToToken();
+
+  // get char
+  char c;
+  infile.get(c);
+  offset++;
+
+  return c;
 }
 
 /**
@@ -103,9 +176,23 @@ bool isValid(char ch)
 void moveToToken()
 {
   char c;
+
   while (!isValid(infile.peek()))
   {
     infile.get(c);
+    offset++;
+
+    if (c == '\n')
+    {
+      line++;
+      offset = 0;
+    }
+
+    // check file status
+    if (infile.eof())
+    {
+      break;
+    }
   }
 }
 

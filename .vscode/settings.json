@@ -4,5 +4,8 @@
     "cstdio": "cpp",
     "iostream": "cpp",
     "unordered_map": "cpp"
-  }
+  },
+  "cSpell.words": [
+    "IEAR"
+  ]
 }
