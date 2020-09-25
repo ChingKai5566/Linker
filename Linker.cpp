@@ -6,7 +6,7 @@
 static ifstream infile;
 static int line;
 static int offset;
-static unordered_map<string, int> symToVal; // definition list
+static map<string, int> symToVal; // definition list
 
 static string errstr[] = {
     "NUM_EXPECTED",           // Number expect
@@ -15,7 +15,8 @@ static string errstr[] = {
     "SYM_TOO_LONG",           // Symbol Name is too long
     "TOO_MANY_DEF_IN_MODULE", // > 16
     "TOO_MANY_USE_IN_MODULE", // > 16
-    "TOO_MANY_INSTR"};        // total num_instr exceeds memory size (512)
+    "TOO_MANY_INSTR",         // total num_instr exceeds memory size (512)
+    "ADDR_MODE_EXPECTED"};
 
 /**
  * tokenizer
@@ -158,10 +159,22 @@ char readIEAR()
   // find next valid char
   moveToToken();
 
+  // check eof
+  if (infile.eof())
+  {
+    parseError(2);
+  }
+
   // get char
   char c;
   infile.get(c);
   offset++;
+
+  // check error
+  if (c != 'I' && c != 'E' && c != 'A' && c != 'R')
+  {
+    parseError(7);
+  }
 
   return c;
 }
