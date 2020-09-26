@@ -43,6 +43,7 @@ void pass1(string filename)
     // definition list
     int defCount = readInt();
 
+    // finish parsing
     if (defCount == -1)
     {
       break;
@@ -117,6 +118,9 @@ int readInt()
   return count;
 }
 
+/**
+ * read next address
+ */
 int readAddr()
 {
   // find next valid char
@@ -229,6 +233,7 @@ bool isValid(char ch)
 void moveToToken()
 {
   char c;
+  // memorize current location
   int tmpLine = line;
   int tmpOffset = offset;
 
