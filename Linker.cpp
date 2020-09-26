@@ -43,6 +43,7 @@ void pass1(string filename)
     // definition list
     int defCount = readInt();
 
+    // check def count
     if (defCount > 16)
     {
       offset -= (calculateDigit(defCount) - 1);
@@ -70,6 +71,13 @@ void pass1(string filename)
       parseError(0);
     }
 
+    // check use Count
+    if (useCount > 16)
+    {
+      offset -= (calculateDigit(useCount) - 1);
+      parseError(5);
+    }
+
     for (int i = 0; i < useCount; i++)
     {
       string sym = readSymbol();
@@ -78,13 +86,19 @@ void pass1(string filename)
     // program text
     int codeCount = readInt();
 
+    // check total length < 512
+    len += codeCount;
+    if (len > 512)
+    {
+      offset -= (calculateDigit(codeCount) - 1);
+      parseError(6);
+    }
+
     for (int i = 0; i < codeCount; i++)
     {
       char addressMode = readIEAR();
       int operand = readAddr();
     }
-
-    len += codeCount;
   }
 
   print_map(symToVal);
