@@ -43,6 +43,12 @@ void pass1(string filename)
     // definition list
     int defCount = readInt();
 
+    if (defCount > 16)
+    {
+      offset -= (calculateDigit(defCount) - 1);
+      parseError(4);
+    }
+
     // finish parsing
     if (defCount == -1)
     {
@@ -103,9 +109,9 @@ int readInt()
   // calculate defcount
   int count = 0;
   char c;
+
   while (isValid(infile.peek()))
   {
-
     infile.get(c);
     offset++;
     if (c < '0' || c > '9')
@@ -258,10 +264,35 @@ void moveToToken()
   }
 }
 
+/**
+ * handle parsing error
+ * @param errcode
+ */
 void parseError(int errcode)
 {
   cout << "Parse Error line " << line << " offset " << offset << ": " << errstr[errcode] << endl;
   exit(0);
+}
+
+/**
+ * calculate integer digits
+ * @param number
+ */
+int calculateDigit(int num)
+{
+  int digits = 0;
+  if (num < 0)
+  {
+    digits = 1;
+  }
+
+  while (num != 0)
+  {
+    num /= 10;
+    digits++;
+  }
+
+  return digits;
 }
 
 /**

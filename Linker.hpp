@@ -16,6 +16,7 @@ void pass1(string filename);
 char readIEAR();
 void parseError(int errcode);
 int readAddr();
+int calculateDigit(int num);
 
 // print a pair
 template <typename T1, typename T2>
