@@ -3,6 +3,7 @@
 #include <fstream>
 #include <regex>
 #include <map>
+#include <set>
 
 using namespace std;
 
@@ -13,10 +14,19 @@ bool isValidSymbol(string sym);
 bool isValid(char ch);
 void moveToToken();
 void pass1(string filename);
+void pass2(string filename);
 char readIEAR();
 void parseError(int errcode);
 int readAddr();
 int calculateDigit(int num);
+
+struct Module
+{
+  int len;
+  int start;
+  map<string, int> symToVal;
+  map<char, int> typeToAddr;
+};
 
 // print a pair
 template <typename T1, typename T2>

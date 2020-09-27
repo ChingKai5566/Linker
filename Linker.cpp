@@ -7,6 +7,8 @@ static ifstream infile;
 static int line;
 static int offset;
 static map<string, int> symToVal; // definition list
+static set<string> duplicateSym;
+static vector<Module> moduleList;
 
 static string errstr[] = {
     "NUM_EXPECTED",           // Number expect
@@ -25,6 +27,11 @@ static string errstr[] = {
 void tokenizer(string filename)
 {
   pass1(filename);
+
+  cout << endl;
+  cout << "Memory Map" << endl;
+
+  // pass2(filename);
 }
 
 /**
@@ -40,6 +47,9 @@ void pass1(string filename)
 
   while (!infile.eof())
   {
+    // create module
+    Module module;
+
     // definition list
     int defCount = readInt();
 
@@ -60,7 +70,8 @@ void pass1(string filename)
     {
       string sym = readSymbol();
       int val = readInt();
-      symToVal[sym] = val + len;
+
+      module.symToVal[sym] = val + len;
     }
 
     // use list
@@ -87,6 +98,7 @@ void pass1(string filename)
     int codeCount = readInt();
 
     // check total length < 512
+    module.start = len;
     len += codeCount;
     if (len > 512)
     {
@@ -94,16 +106,61 @@ void pass1(string filename)
       parseError(6);
     }
 
+    module.len = codeCount;
+
     for (int i = 0; i < codeCount; i++)
     {
       char addressMode = readIEAR();
       int operand = readAddr();
+      module.typeToAddr[addressMode] = operand;
+    }
+
+    moduleList.push_back(module);
+  }
+
+  // check sym too big
+  for (int i = 0; i < moduleList.size(); i++)
+  {
+    for (auto m : moduleList[i].symToVal)
+    {
+      if (m.second >= moduleList[i].len)
+      {
+        cout << "Warning: Module " << i + 1 << ": " << m.first << " too big " << m.second - moduleList[i].start << " (max=" << moduleList[i].len - 1 << ") assume zero relative" << endl;
+        moduleList[i].symToVal[m.first] = moduleList[i].start;
+      }
+
+      // check duplicate
+      if (symToVal.count(m.first) > 0)
+      {
+        duplicateSym.insert(m.first);
+      }
+      else
+      {
+        symToVal[m.first] = moduleList[i].symToVal[m.first];
+      }
     }
   }
 
-  print_map(symToVal);
+  // output Symbol Table
+  cout << "Symbol Table" << endl;
+
+  for (auto m : symToVal)
+  {
+    cout << m.first << "=" << m.second << " ";
+
+    if (duplicateSym.count(m.first) > 0)
+    {
+      cout << "Error: This variable is multiple times defined; first value used";
+    }
+
+    cout << endl;
+  }
 
   infile.close();
+}
+
+void pass2(string filename)
+{
 }
 
 /**
