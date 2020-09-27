@@ -25,7 +25,7 @@ struct Module
   int len;
   int start;
   map<string, int> symToVal;
-  map<char, int> typeToAddr;
+  // map<char, int> typeToAddr;
 };
 
 // print a pair

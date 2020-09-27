@@ -8,7 +8,7 @@ static int line;
 static int offset;
 static map<string, int> symToVal; // definition list
 static set<string> duplicateSym;
-static vector<Module> moduleList;
+static set<string> symSet;
 
 static string errstr[] = {
     "NUM_EXPECTED",           // Number expect
@@ -44,11 +44,13 @@ void pass1(string filename)
   int len = 0;
   line = 1;
   offset = 0;
+  int curModule = 0;
 
   while (!infile.eof())
   {
     // create module
     Module module;
+    curModule++;
 
     // definition list
     int defCount = readInt();
@@ -63,6 +65,7 @@ void pass1(string filename)
     // finish parsing
     if (defCount == -1)
     {
+      curModule--;
       break;
     }
 
@@ -71,7 +74,15 @@ void pass1(string filename)
       string sym = readSymbol();
       int val = readInt();
 
-      module.symToVal[sym] = val + len;
+      if (symToVal.count(sym) > 0)
+      {
+        duplicateSym.insert(sym);
+      }
+      else
+      {
+        symToVal[sym] = val + len;
+        module.symToVal[sym] = val;
+      }
     }
 
     // use list
@@ -112,31 +123,15 @@ void pass1(string filename)
     {
       char addressMode = readIEAR();
       int operand = readAddr();
-      module.typeToAddr[addressMode] = operand;
+      // module.typeToAddr[addressMode] = operand;
     }
 
-    moduleList.push_back(module);
-  }
-
-  // check sym too big
-  for (int i = 0; i < moduleList.size(); i++)
-  {
-    for (auto m : moduleList[i].symToVal)
+    for (auto m : module.symToVal)
     {
-      if (m.second >= moduleList[i].len)
+      if (m.second >= codeCount)
       {
-        cout << "Warning: Module " << i + 1 << ": " << m.first << " too big " << m.second - moduleList[i].start << " (max=" << moduleList[i].len - 1 << ") assume zero relative" << endl;
-        moduleList[i].symToVal[m.first] = moduleList[i].start;
-      }
-
-      // check duplicate
-      if (symToVal.count(m.first) > 0)
-      {
-        duplicateSym.insert(m.first);
-      }
-      else
-      {
-        symToVal[m.first] = moduleList[i].symToVal[m.first];
+        cout << "Warning: Module " << curModule << ": " << m.first << " too big " << m.second << " (max=" << codeCount - 1 << ") assume zero relative" << endl;
+        symToVal[m.first] = module.start;
       }
     }
   }
@@ -161,6 +156,10 @@ void pass1(string filename)
 
 void pass2(string filename)
 {
+  infile.open(filename);
+  int len = 0;
+  line = 1;
+  offset = 0;
 }
 
 /**
