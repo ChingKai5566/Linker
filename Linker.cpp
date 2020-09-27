@@ -9,6 +9,7 @@ static int offset;
 static map<string, int> symToVal; // definition list
 static set<string> duplicateSym;
 static set<string> symSet;
+static map<int, string> addrToSymExternal;
 
 static string errstr[] = {
     "NUM_EXPECTED",           // Number expect
@@ -31,7 +32,7 @@ void tokenizer(string filename)
   cout << endl;
   cout << "Memory Map" << endl;
 
-  // pass2(filename);
+  pass2(filename);
 }
 
 /**
@@ -158,8 +159,87 @@ void pass2(string filename)
 {
   infile.open(filename);
   int len = 0;
-  line = 1;
-  offset = 0;
+
+  while (!infile.eof())
+  {
+    // definition list
+    int defCount = readInt();
+
+    // finish parsing
+    if (defCount == -1)
+    {
+      break;
+    }
+
+    for (int i = 0; i < defCount; i++)
+    {
+      string sym = readSymbol();
+      int val = readInt();
+    }
+
+    // use list
+    int useCount = readInt();
+    vector<string> useList;
+
+    for (int i = 0; i < useCount; i++)
+    {
+      string sym = readSymbol();
+      useList.push_back(sym);
+    }
+
+    // detect external length is valid
+    bool externalValidLength = true; // if external type > useCount, change to false
+    int countE = 0;
+
+    // address to symbol
+    map<int, string> addrToSym;
+
+    // memory map
+    map<int, int> memoryMap;
+
+    // program text
+    int codeCount = readInt();
+
+    for (int i = 0; i < codeCount; i++)
+    {
+      char addressMode = readIEAR();
+      int operand = readAddr();
+
+      // add operand into memoryMap
+      if (addressMode == 'R')
+      {
+        operand += len;
+      }
+
+      int addr = len + i;
+
+      memoryMap[addr] = operand;
+    }
+
+    len += codeCount;
+
+    // print map
+    for (auto m : memoryMap)
+    {
+      string address = "0";
+
+      if (m.first == 0)
+      {
+        address = "000";
+      }
+      else if (calculateDigit(m.first) == 1)
+      {
+        address += "0";
+        address += to_string(m.first);
+      }
+      else
+      {
+        address += to_string(m.first);
+      }
+
+      cout << address << ": " << m.second << endl;
+    }
+  }
 }
 
 /**
