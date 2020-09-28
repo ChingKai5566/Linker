@@ -203,24 +203,43 @@ void pass2(string filename)
       int instr = readAddr();
 
       int opcode = instr / 1000;
-
       int operand = instr % 1000;
+      int addr = len + i;
 
       // add operand into memoryMap
       if (addressMode == 'R')
       {
         instr += len;
+        printMemoryTable(addr, instr);
+      }
+
+      if (addressMode == 'A')
+      {
+        if (operand >= 512)
+        {
+          instr = opcode * 1000;
+          printMemoryTable(addr, instr);
+          cout << " Error: Absolute address exceeds machine size; zero used";
+        }
+        else
+        {
+          printMemoryTable(addr, instr);
+        }
       }
 
       if (addressMode == 'E')
       {
         instr = opcode * 1000 + symToVal[addrToSymExternal[operand]];
+        printMemoryTable(addr, instr);
       }
 
-      int addr = len + i;
+      if (addressMode == 'I')
+      {
+        printMemoryTable(addr, instr);
+      }
 
       // memoryMap[addr] = instr;
-      printMemoryTable(addr, instr);
+      // printMemoryTable(addr, instr);
 
       cout << endl;
     }
