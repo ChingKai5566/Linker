@@ -155,6 +155,10 @@ void pass1(string filename)
   infile.close();
 }
 
+/**
+ * second time go through the text, check run time error and warning
+ * @param name input file name
+ */
 void pass2(string filename)
 {
   infile.open(filename);
@@ -332,6 +336,11 @@ void pass2(string filename)
   }
 }
 
+/**
+ * output memory table
+ * @param address memory location
+ * @param instruction operand
+ */
 void printMemoryTable(int addr, int instr)
 {
   string address = "";
