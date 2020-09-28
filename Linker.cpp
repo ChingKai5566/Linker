@@ -8,7 +8,7 @@ static int line;
 static int offset;
 static map<string, int> symToVal; // definition list
 static set<string> duplicateSym;
-static set<string> symSet;
+static map<string, int> symToModule;
 
 static string errstr[] = {
     "NUM_EXPECTED",           // Number expect
@@ -82,6 +82,7 @@ void pass1(string filename)
       {
         symToVal[sym] = val + len;
         module.symToVal[sym] = val;
+        symToModule[sym] = curModule; // for pass2 use to check the symbol used
       }
     }
 
@@ -158,15 +159,19 @@ void pass2(string filename)
 {
   infile.open(filename);
   int len = 0;
+  int curModule = 0;
 
   while (!infile.eof())
   {
+    curModule++;
+
     // definition list
     int defCount = readInt();
 
     // finish parsing
     if (defCount == -1)
     {
+      curModule--;
       break;
     }
 
@@ -191,9 +196,6 @@ void pass2(string filename)
       addrToSymExternal[ref++] = sym;
     }
 
-    // check symbal use
-    set<int> symUsed;
-
     // program text
     int codeCount = readInt();
 
@@ -209,8 +211,18 @@ void pass2(string filename)
       // add operand into memoryMap
       if (addressMode == 'R')
       {
-        instr += len;
-        printMemoryTable(addr, instr);
+        if (operand >= codeCount)
+        {
+          instr = opcode * 1000 + len;
+          printMemoryTable(addr, instr);
+          cout << " Error: Relative address exceeds module size; zero used";
+        }
+        else
+        {
+          instr += len;
+
+          printMemoryTable(addr, instr);
+        }
       }
 
       if (addressMode == 'A')
@@ -229,8 +241,39 @@ void pass2(string filename)
 
       if (addressMode == 'E')
       {
-        instr = opcode * 1000 + symToVal[addrToSymExternal[operand]];
-        printMemoryTable(addr, instr);
+        if (operand >= useCount)
+        {
+          printMemoryTable(addr, instr);
+          cout << " Error: External address exceeds length of uselist; treated as immediate";
+        }
+        else
+        {
+          string curSym = addrToSymExternal[operand];
+
+          // mark curSym as used
+          if (usedSet.count(curSym))
+          {
+            usedSet.erase(curSym);
+          }
+
+          // check curSym is defined
+          if (symToVal.count(curSym))
+          {
+            if (symToModule.count(curSym))
+            {
+              symToModule.erase(curSym);
+            }
+
+            instr = opcode * 1000 + symToVal[curSym];
+            printMemoryTable(addr, instr);
+          }
+          else
+          {
+            instr = opcode * 1000;
+            printMemoryTable(addr, instr);
+            cout << " Error: " << curSym << " is not defined; zero used";
+          }
+        }
       }
 
       if (addressMode == 'I')
@@ -238,13 +281,22 @@ void pass2(string filename)
         printMemoryTable(addr, instr);
       }
 
-      // memoryMap[addr] = instr;
-      // printMemoryTable(addr, instr);
-
       cout << endl;
     }
 
+    for (string sym : usedSet)
+    {
+      cout << "Warning: Module " << curModule << ": " << sym << "  appeared in the uselist but was not actually used" << endl;
+    }
+
     len += codeCount;
+  }
+
+  cout << endl;
+
+  for (auto m : symToModule)
+  {
+    cout << "Warning: Module " << m.second << ": " << m.first << " was defined but never used" << endl;
   }
 }
 
