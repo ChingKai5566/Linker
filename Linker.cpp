@@ -211,17 +211,25 @@ void pass2(string filename)
       // add operand into memoryMap
       if (addressMode == 'R')
       {
-        if (operand >= codeCount)
+        if (opcode >= 10)
         {
-          instr = opcode * 1000 + len;
-          printMemoryTable(addr, instr);
-          cout << " Error: Relative address exceeds module size; zero used";
+          printMemoryTable(addr, 9999);
+          cout << " Error: Illegal opcode; treated as 9999";
         }
         else
         {
-          instr += len;
+          if (operand >= codeCount)
+          {
+            instr = opcode * 1000 + len;
+            printMemoryTable(addr, instr);
+            cout << " Error: Relative address exceeds module size; zero used";
+          }
+          else
+          {
+            instr += len;
 
-          printMemoryTable(addr, instr);
+            printMemoryTable(addr, instr);
+          }
         }
       }
 
@@ -278,7 +286,15 @@ void pass2(string filename)
 
       if (addressMode == 'I')
       {
-        printMemoryTable(addr, instr);
+        if (instr > 9999)
+        {
+          printMemoryTable(addr, 9999);
+          cout << " Error: Illegal immediate value; treated as 9999";
+        }
+        else
+        {
+          printMemoryTable(addr, instr);
+        }
       }
 
       cout << endl;
@@ -303,6 +319,7 @@ void pass2(string filename)
 void printMemoryTable(int addr, int instr)
 {
   string address = "";
+  string instruction = "";
 
   if (addr == 0)
   {
@@ -319,7 +336,31 @@ void printMemoryTable(int addr, int instr)
     address += to_string(addr);
   }
 
-  cout << address << ": " << instr;
+  if (instr == 0)
+  {
+    instruction = "0000";
+  }
+  else if (calculateDigit(instr) == 1)
+  {
+    instruction += "000";
+    instruction += to_string(instr);
+  }
+  else if (calculateDigit(instr) == 2)
+  {
+    instruction += "00";
+    instruction += to_string(instr);
+  }
+  else if (calculateDigit(instr) == 3)
+  {
+    instruction += "0";
+    instruction += to_string(instr);
+  }
+  else
+  {
+    instruction += to_string(instr);
+  }
+
+  cout << address << ": " << instruction;
 }
 
 /**
