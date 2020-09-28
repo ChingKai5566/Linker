@@ -3,4 +3,4 @@ input*
 out*
 *.sh
 main
-.vscode
+.vscode/
