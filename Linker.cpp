@@ -235,51 +235,67 @@ void pass2(string filename)
 
       if (addressMode == 'A')
       {
-        if (operand >= 512)
+        if (opcode >= 10)
         {
-          instr = opcode * 1000;
-          printMemoryTable(addr, instr);
-          cout << " Error: Absolute address exceeds machine size; zero used";
+          printMemoryTable(addr, 9999);
+          cout << " Error: Illegal opcode; treated as 9999";
         }
         else
         {
-          printMemoryTable(addr, instr);
+          if (operand >= 512)
+          {
+            instr = opcode * 1000;
+            printMemoryTable(addr, instr);
+            cout << " Error: Absolute address exceeds machine size; zero used";
+          }
+          else
+          {
+            printMemoryTable(addr, instr);
+          }
         }
       }
 
       if (addressMode == 'E')
       {
-        if (operand >= useCount)
+        if (opcode >= 10)
         {
-          printMemoryTable(addr, instr);
-          cout << " Error: External address exceeds length of uselist; treated as immediate";
+          printMemoryTable(addr, 9999);
+          cout << " Error: Illegal opcode; treated as 9999";
         }
         else
         {
-          string curSym = addrToSymExternal[operand];
-
-          // mark curSym as used
-          if (usedSet.count(curSym))
+          if (operand >= useCount)
           {
-            usedSet.erase(curSym);
-          }
-
-          // check curSym is defined
-          if (symToVal.count(curSym))
-          {
-            if (symToModule.count(curSym))
-            {
-              symToModule.erase(curSym);
-            }
-
-            instr = opcode * 1000 + symToVal[curSym];
             printMemoryTable(addr, instr);
+            cout << " Error: External address exceeds length of uselist; treated as immediate";
           }
           else
           {
-            instr = opcode * 1000;
-            printMemoryTable(addr, instr);
-            cout << " Error: " << curSym << " is not defined; zero used";
+            string curSym = addrToSymExternal[operand];
+
+            // mark curSym as used
+            if (usedSet.count(curSym))
+            {
+              usedSet.erase(curSym);
+            }
+
+            // check curSym is defined
+            if (symToVal.count(curSym))
+            {
+              if (symToModule.count(curSym))
+              {
+                symToModule.erase(curSym);
+              }
+
+              instr = opcode * 1000 + symToVal[curSym];
+              printMemoryTable(addr, instr);
+            }
+            else
+            {
+              instr = opcode * 1000;
+              printMemoryTable(addr, instr);
+              cout << " Error: " << curSym << " is not defined; zero used";
+            }
           }
         }
       }
