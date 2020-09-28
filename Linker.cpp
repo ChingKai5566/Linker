@@ -9,7 +9,6 @@ static int offset;
 static map<string, int> symToVal; // definition list
 static set<string> duplicateSym;
 static set<string> symSet;
-static map<int, string> addrToSymExternal;
 
 static string errstr[] = {
     "NUM_EXPECTED",           // Number expect
@@ -179,23 +178,21 @@ void pass2(string filename)
 
     // use list
     int useCount = readInt();
-    vector<string> useList;
+    set<string> usedSet;
+
+    // addr to external
+    static map<int, string> addrToSymExternal;
+    int ref = 0;
 
     for (int i = 0; i < useCount; i++)
     {
       string sym = readSymbol();
-      useList.push_back(sym);
+      usedSet.insert(sym);
+      addrToSymExternal[ref++] = sym;
     }
 
-    // detect external length is valid
-    bool externalValidLength = true; // if external type > useCount, change to false
-    int countE = 0;
-
-    // address to symbol
-    map<int, string> addrToSym;
-
-    // memory map
-    map<int, int> memoryMap;
+    // check symbal use
+    set<int> symUsed;
 
     // program text
     int codeCount = readInt();
@@ -203,43 +200,55 @@ void pass2(string filename)
     for (int i = 0; i < codeCount; i++)
     {
       char addressMode = readIEAR();
-      int operand = readAddr();
+      int instr = readAddr();
+
+      int opcode = instr / 1000;
+
+      int operand = instr % 1000;
 
       // add operand into memoryMap
       if (addressMode == 'R')
       {
-        operand += len;
+        instr += len;
+      }
+
+      if (addressMode == 'E')
+      {
+        instr = opcode * 1000 + symToVal[addrToSymExternal[operand]];
       }
 
       int addr = len + i;
 
-      memoryMap[addr] = operand;
+      // memoryMap[addr] = instr;
+      printMemoryTable(addr, instr);
+
+      cout << endl;
     }
 
     len += codeCount;
-
-    // print map
-    for (auto m : memoryMap)
-    {
-      string address = "0";
-
-      if (m.first == 0)
-      {
-        address = "000";
-      }
-      else if (calculateDigit(m.first) == 1)
-      {
-        address += "0";
-        address += to_string(m.first);
-      }
-      else
-      {
-        address += to_string(m.first);
-      }
-
-      cout << address << ": " << m.second << endl;
-    }
   }
+}
+
+void printMemoryTable(int addr, int instr)
+{
+  string address = "";
+
+  if (addr == 0)
+  {
+    address = "000";
+  }
+  else if (calculateDigit(addr) == 1)
+  {
+    address += "00";
+    address += to_string(addr);
+  }
+  else
+  {
+    address += "0";
+    address += to_string(addr);
+  }
+
+  cout << address << ": " << instr;
 }
 
 /**

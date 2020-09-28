@@ -19,6 +19,7 @@ char readIEAR();
 void parseError(int errcode);
 int readAddr();
 int calculateDigit(int num);
+void printMemoryTable(int addr, int instr);
 
 struct Module
 {
