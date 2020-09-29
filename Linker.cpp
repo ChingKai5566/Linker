@@ -322,7 +322,7 @@ void pass2(string filename)
 
     for (string sym : usedSet)
     {
-      cout << "Warning: Module " << curModule << ": " << sym << "  appeared in the uselist but was not actually used" << endl;
+      cout << "Warning: Module " << curModule << ": " << sym << " appeared in the uselist but was not actually used" << endl;
     }
 
     len += codeCount;
@@ -470,6 +470,8 @@ string readSymbol()
   // build symbol
   string symbol;
   char c;
+  int tmpOffset = offset;
+
   while (isValid(infile.peek()))
   {
     infile.get(c);
@@ -479,12 +481,14 @@ string readSymbol()
     regex reg("[a-zA-Z]");
     if (symbol.length() == 1 && !regex_match(symbol, reg))
     {
+      offset = tmpOffset + 1;
       parseError(1);
     }
   }
 
   if (symbol.length() > 16)
   {
+    offset = tmpOffset + 1;
     parseError(3);
   }
 
