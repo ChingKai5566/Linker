@@ -488,7 +488,6 @@ string readSymbol()
     regex reg2("[a-zA-Z0-9]*");
     if (!regex_match(symbol, reg2))
     {
-      offset = tmpOffset + 1;
       parseError(1);
     }
   }
