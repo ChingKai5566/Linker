@@ -478,8 +478,15 @@ string readSymbol()
     offset++;
     symbol += c;
 
-    regex reg("[a-zA-Z]");
-    if (symbol.length() == 1 && !regex_match(symbol, reg))
+    regex reg1("[a-zA-Z]");
+    if (symbol.length() == 1 && !regex_match(symbol, reg1))
+    {
+      offset = tmpOffset + 1;
+      parseError(1);
+    }
+
+    regex reg2("[a-zA-Z0-9]*");
+    if (!regex_match(symbol, reg2))
     {
       offset = tmpOffset + 1;
       parseError(1);
