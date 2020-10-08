@@ -4,3 +4,4 @@ out*
 *.sh
 main
 .vscode/*
+*.zip
